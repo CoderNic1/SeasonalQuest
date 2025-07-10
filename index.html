@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeasonQuest: Realm of Renewal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            max-width: 100vw;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Main Menu Styles */
+        .main-menu {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .game-title {
+            font-size: clamp(2rem, 8vw, 4rem);
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-subtitle {
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .menu-button {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            min-width: 200px;
+        }
+
+        .menu-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .menu-button.secondary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        }
+
+        .menu-button.tertiary {
+            background: linear-gradient(45deg, #ffa726, #ff9800);
+        }
+
+        /* Game Screen Styles */
+        .game-screen {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        /* Seasonal Backgrounds */
+        .season-spring {
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc8 50%, #f1f8e9 100%);
+        }
+
+        .season-summer {
+            background: linear-gradient(135deg, #ffd54f 0%, #ffcc02 50%, #ff8f00 100%);
+        }
+
+        .season-autumn {
+            background: linear-gradient(135deg, #ff8a65 0%, #ffab40 50%, #ffcc80 100%);
+        }
+
+        .season-winter {
+            background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 50%, #81d4fa 100%);
+        }
+
+        /* HUD Styles */
+        .hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            flex-wrap: wrap;
+        }
+
+        .hud-left, .hud-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-bar {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 5px 10px;
+            min-width: 120px;
+        }
+
+        .stat-fill {
+            height: 8px;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .health-bar { background: #e74c3c; }
+        .stamina-bar { background: #3498db; }
+        .credits-display { background: #f39c12; }
+
+        /* Game World */
+        .game-world {
+            padding-top: 80px;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .realm-map {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .realm-tile {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .realm-tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .realm-tile.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .realm-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .realm-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .realm-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .action-btn {
+            background: rgba(0,0,0,0.7);
+            border: none;
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            width: 60px;
+            height: 60px;
+        }
+
+        .action-btn:hover {
+            background: rgba(0,0,0,0.9);
+            transform: scale(1.1);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Shop Styles */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .shop-item {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .shop-item:hover {
+            border-color: #007bff;
+            transform: translateY(-2px);
+        }
+
+        .shop-item.owned {
+            background: #e8f5e8;
+            border-color: #28a745;
+        }
+
+        .buy-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .buy-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Inventory Styles */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .inventory-slot {
+            aspect-ratio: 1;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: #f8f9fa;
+        }
+
+        .inventory-slot.filled {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        /* Weather Effects */
+        .weather-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .rain {
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(255,255,255,0.1) 2px,
+                rgba(255,255,255,0.1) 4px
+            );
+            animation: rain 0.5s linear infinite;
+        }
+
+        .snow {
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: snow 3s linear infinite;
+        }
+
+        @keyframes rain {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(100px); }
+        }
+
+        @keyframes snow {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hud {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .hud-left, .hud-right {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .game-world {
+                padding-top: 120px;
+            }
+
+            .realm-map {
+                grid-template-columns: 1fr;
+                padding: 10px;
+            }
+
+            .action-buttons {
+                bottom: 10px;
+                flex-wrap: wrap;
+            }
+
+            .action-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1rem;
+            }
+
+            .modal-content {
+                margin: 10px;
+                padding: 20px;
+            }
+        }
+
+        /* Character Customization */
+        .hero-preview {
+            width: 100px;
+            height: 100px;
+            border: 3px solid #ddd;
+            border-radius: 50%;
+            margin: 20px auto;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .customization-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .option-group {
+            text-align: center;
+        }
+
+        .option-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .option-btn {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn.selected {
+            border-color: #007bff;
+            background: #007bff;
+            color: white;
+        }
+
+        /* Battle System */
+        .battle-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .battle-screen.active {
+            display: flex;
+        }
+
+        .enemy-display {
+            width: 200px;
+            height: 200px;
+            border: 3px solid #333;
+            border-radius: 15px;
+            margin: 20px;
+            background: linear-gradient(45deg, #8b0000, #cd5c5c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
+
+        .battle-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .battle-btn {
+            padding: 15px 25px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .battle-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .battle-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Token Vault */
+        .token-display {
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .token-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .exchange-rate {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .exchange-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .exchange-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .exchange-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Notification System */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 3000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            color: white;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Custom Asset Integration */
+        .asset-placeholder {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .asset-upload {
+            margin: 10px 0;
+        }
+
+        .asset-upload input[type="file"] {
+            display: none;
+        }
+
+        .asset-upload label {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .asset-upload label:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Main Menu -->
+        <div id="mainMenu" class="main-menu">
+            <h1 class="game-title">SeasonQuest</h1>
+            <h2 class="game-subtitle">Realm of Renewal</h2>
+            <div class="menu-buttons">
+                <button class="menu-button" onclick="showHeroCustomization()">Begin Journey</button>
+                <button class="menu-button secondary" onclick="showRealmSelect()">Select Realm</button>
+                <button class="menu-button tertiary" onclick="showTokenVault()">Token Vault</button>
+                <button class="menu-button tertiary" onclick="showUpgradeShop()">Upgrade Shop</button>
+                <button class="menu-button secondary" onclick="showInventory()">Inventory</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="game-screen season-spring">
+            <!-- HUD -->
+            <div class="hud">
+                <div class="hud-left">
+                    <div class="stat-bar">
+                        <div>Health: <span id="healthValue">100</span>/100</div>
+                        <div class="stat-fill health-bar" id="healthBar" style="width: 100%"></div>
+                    </div>
+                    <div class="stat-bar">
+                        <div>Stamina: <span id="staminaValue">100</span>/100</div>
+                        <div class="stat-fill stamina-bar" id="staminaBar" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="hud-right">
+                    <div class="stat-bar credits-display">
+                        <div>Credits: <span id="creditsValue">0</span></div>
+                    </div>
+                    <button class="menu-button" onclick="showMainMenu()" style="padding: 8px 16px; margin: 0;">Menu</button>
+                </div>
+            </div>
+
+            <!-- Game World -->
+            <div class="game-world">
+                <div class="realm-map" id="realmMap">
+                    <!-- Realm tiles will be generated here -->
+                </div>
+            </div>
+
+            <!-- Weather Overlay -->
+            <div class="weather-overlay" id="weatherOverlay"></div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn" onclick="interactAction()" title="Interact">🤝</button>
+                <button class="action-btn" onclick="attackAction()" title="Attack">⚔️</button>
+                <button class="action-btn" onclick="gatherAction()" title="Gather">🌿</button>
+                <button class="action-btn" onclick="showInventory()" title="Inventory">🎒</button>
+                <button class="action-btn" onclick="showMap()" title="Map">🗺️</button>
+            </div>
+        </div>
+
+        <!-- Battle Screen -->
+        <div id="battleScreen" class="battle-screen">
+            <h2>Battle!</h2>
+            <div class="enemy-display" id="enemyDisplay">🐲</div>
+            <div id="battleLog"></div>
+            <div class="battle-actions">
+                <button class="battle-btn" onclick="battleAction('attack')">Attack</button>
+                <button class="battle-btn" onclick="battleAction('defend')">Defend</button>
+                <button class="battle-btn" onclick="battleAction('special')">Special Ability</button>
+                <button class="battle-btn" onclick="battleAction('flee')">Flee</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Customization Modal -->
+    <div id="heroCustomizationModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('heroCustomizationModal')">&times;</button>
+            <h2>Customize Your Hero</h2>
+            <div class="hero-preview" id="heroPreview">🧙</div>
+            <div class="customization-options">
+                <div class="option-group">
+                    <h3>Class</h3>
+                    <div class="option-buttons">
+                        <button class="option-btn selected" onclick="selectHeroOption('class', 'warrior', '⚔️')">Warrior</button>
+                        <button class="option-btn" onclick="selectHeroOption('class', 'mage', '🧙')">Mage</button>
+                        <button class="option-btn" onclick="selectHeroOption('class', 'archer', '🏹')">Archer</button>
+                        <button class="option-btn" onclick="selectHeroOption('class', 'rogue', '🗡️')">Rogue</button>
+                    </div>
+                </div>
+                <div class="option-group">
+                    <h3>Seasonal Affinity</h3>
+                    <div class="option-buttons">
+                        <button class="option-btn selected" onclick="selectHeroOption('affinity', 'spring', '🌸')">Spring</button>
+                        <button class="option-btn" onclick="selectHeroOption('affinity', 'summer', '☀️')">Summer</button>
+                        <button class="option-btn" onclick="selectHeroOption('affinity', 'autumn', '🍂')">Autumn</button>
+                        <button class="option-btn" onclick="selectHeroOption('affinity', 'winter', '❄️')">Winter</button>
+                    </div>
+                </div>
+            </div>
+            <div class="asset-upload">
+                <label for="heroImageUpload">Upload Custom Hero Image</label>
+                <input type="file" id="heroImageUpload" accept="image/*" onchange="uploadHeroImage(this)">
+            </div>
+            <button class="menu-button" onclick="startGame()">Start Adventure</button>
+        </div>
+    </div>
+
+    <!-- Realm Select Modal -->
+    <div id="realmSelectModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('realmSelectModal')">&times;</button>
+            <h2>Select Realm</h2>
+            <div class="realm-map" id="realmSelectMap">
+                <!-- Realm selection will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Token Vault Modal -->
+    <div id="tokenVaultModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('tokenVaultModal')">&times;</button>
+            <h2>Token Vault</h2>
+            <div class="token-display">
+                <div class="token-amount" id="tokenAmount">0 ST</div>
+                <div class="exchange-rate">1 ST = 100 Seasonal Credits</div>
+            </div>
+            <div>
+                <h3>Exchange Credits for Tokens</h3>
+                <p>Convert your Seasonal Credits into blockchain-based Seasonal Tokens (ST)</p>
+                <button class="exchange-btn" onclick="exchangeCredits()" id="exchangeBtn">Exchange 100 Credits → 1 ST</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <h3>Your Wallet</h3>
+                <div class="asset-placeholder">
+                    Blockchain wallet integration placeholder
+                    <br>Connect your wallet to manage tokens
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upgrade Shop Modal -->
+    <div id="upgradeShopModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('upgradeShopModal')">&times;</button>
+            <h2>Upgrade Shop</h2>
+            <div class="shop-grid" id="shopGrid">
+                <!-- Shop items will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div id="inventoryModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('inventoryModal')">&times;</button>
+            <h2>Inventory</h2>
+            <div class="inventory-grid" id="inventoryGrid">
+                <!-- Inventory slots will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Modal -->
+    <div id="mapModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('mapModal')">&times;</button>
+            <h2>Realm Map</h2>
+            <div id="mapDisplay" class="asset-placeholder">
+                Interactive map placeholder
+                <br>Current realm exploration progress
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div style="margin-top: 20px;">Loading...</div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            hero: {
+                class: 'warrior',
+                affinity: 'spring',
+                icon: '⚔️',
+                level: 1,
+                health: 100,
+                maxHealth: 100,
+                stamina: 100,
+                maxStamina: 100,
+                customImage: null
+            },
+            currentRealm: 'spring',
+            unlockedRealms: ['spring'],
+            credits: 0,
+            tokens: 0,
+            inventory: {},
+            upgrades: {
+                weapons: [],
+                armor: [],
+                abilities: [],
+                realmFeatures: []
+            },
+            progress: {
+                spring: { explored: 0, boss: false },
+                summer: { explored: 0, boss: false },
+                autumn: { explored: 0, boss: false },
+                winter: { explored: 0, boss: false }
+            },
+            inBattle: false,
+            currentEnemy: null
+        };
+
+        // Realm Data
+        const realms = {
+            spring: {
+                name: 'Spring Meadows',
+                icon: '🌸',
+                description: 'Blooming flowers and fresh growth',
+                weather: 'rain',
+                enemies: ['🐰', '🦋', '🐝', '🌺'],
+                boss: '🐉',
+                resources: ['🌿', '🌸', '💧'],
+                unlocks: ['summer']
+            },
+            summer: {
+                name: 'Solar Plains',
+                icon: '☀️',
+                description: 'Blazing sun and golden fields',
+                weather: 'clear',
+                enemies: ['🦎', '🐍', '🦂', '🔥'],
+                boss: '🌋',
+                resources: ['☀️', '🌾', '🔥'],
+                unlocks: ['autumn']
+            },
+            autumn: {
+                name: 'Harvest Forests',
+                icon: '🍂',
+                description: 'Falling leaves and abundant harvest',
+                weather: 'wind',
+                enemies: ['🦌', '🍄', '🐻', '🍂'],
+                boss: '🌳',
+                resources: ['🍂', '🍄', '🌰'],
+                unlocks: ['winter']
+            },
+            winter: {
+                name: 'Frozen Peaks',
+                icon: '❄️',
+                description: 'Snow-covered mountains and ice',
+                weather: 'snow',
+                enemies: ['🐺', '🐧', '⛄', '❄️'],
+                boss: '🏔️',
+                resources: ['❄️', '🧊', '💎'],
+                unlocks: []
+            }
+        };
+
+        // Shop Items
+// Shop Items (continuing from where it was cut off)
+const shopItems = {
+            weapons: [
+                { id: 'sword', name: 'Iron Sword', price: 50, icon: '⚔️' },
+                { id: 'staff', name: 'Magic Staff', price: 75, icon: '🪄' },
+                { id: 'bow', name: 'Elven Bow', price: 60, icon: '🏹' },
+                { id: 'dagger', name: 'Shadow Dagger', price: 40, icon: '🗡️' },
+                { id: 'hammer', name: 'Thunder Hammer', price: 100, icon: '🔨' }
+            ],
+            armor: [
+                { id: 'leather', name: 'Leather Armor', price: 30, icon: '🛡️' },
+                { id: 'chain', name: 'Chain Mail', price: 80, icon: '⚔️' },
+                { id: 'plate', name: 'Plate Armor', price: 150, icon: '🛡️' },
+                { id: 'robe', name: 'Mystic Robe', price: 90, icon: '👘' }
+            ],
+            abilities: [
+                { id: 'heal', name: 'Healing Potion', price: 20, icon: '🧪' },
+                { id: 'speed', name: 'Speed Boost', price: 35, icon: '💨' },
+                { id: 'strength', name: 'Strength Elixir', price: 45, icon: '💪' },
+                { id: 'shield', name: 'Magic Shield', price: 60, icon: '🛡️' }
+            ],
+            realmFeatures: [
+                { id: 'bridge', name: 'Realm Bridge', price: 200, icon: '🌉' },
+                { id: 'teleport', name: 'Fast Travel', price: 300, icon: '🌀' },
+                { id: 'weather', name: 'Weather Control', price: 250, icon: '🌤️' },
+                { id: 'map', name: 'Detailed Map', price: 100, icon: '🗺️' }
+            ]
+        };
+
+        // Initialize Game
+        function initGame() {
+            updateHUD();
+            generateRealmMap();
+            generateShopItems();
+            generateInventory();
+            setWeatherEffect();
+            showMainMenu();
+        }
+
+        // Navigation Functions
+        function showMainMenu() {
+            hideAllScreens();
+            document.getElementById('mainMenu').style.display = 'flex';
+        }
+
+        function showHeroCustomization() {
+            document.getElementById('heroCustomizationModal').classList.add('active');
+        }
+
+        function showRealmSelect() {
+            generateRealmSelectMap();
+            document.getElementById('realmSelectModal').classList.add('active');
+        }
+
+        function showTokenVault() {
+            updateTokenDisplay();
+            document.getElementById('tokenVaultModal').classList.add('active');
+        }
+
+        function showUpgradeShop() {
+            generateShopItems();
+            document.getElementById('upgradeShopModal').classList.add('active');
+        }
+
+        function showInventory() {
+            generateInventory();
+            document.getElementById('inventoryModal').classList.add('active');
+        }
+
+        function showMap() {
+            document.getElementById('mapModal').classList.add('active');
+        }
+
+        function hideAllScreens() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('battleScreen').classList.remove('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Hero Customization
+        function selectHeroOption(type, value, icon) {
+            // Remove selected class from all buttons in the group
+            const buttons = document.querySelectorAll(`[onclick*="${type}"]`);
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            // Add selected class to clicked button
+            event.target.classList.add('selected');
+            
+            // Update game state
+            gameState.hero[type] = value;
+            if (type === 'class') {
+                gameState.hero.icon = icon;
+            }
+            
+            updateHeroPreview();
+        }
+
+        function updateHeroPreview() {
+            const preview = document.getElementById('heroPreview');
+            if (gameState.hero.customImage) {
+                preview.innerHTML = `<img src="${gameState.hero.customImage}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+            } else {
+                preview.innerHTML = gameState.hero.icon;
+            }
+        }
+
+        function uploadHeroImage(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    gameState.hero.customImage = e.target.result;
+                    updateHeroPreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function startGame() {
+            closeModal('heroCustomizationModal');
+            hideAllScreens();
+            document.getElementById('gameScreen').classList.add('active');
+            showNotification('Adventure begins! Welcome to the Spring Meadows!');
+        }
+
+        // Realm Management
+        function generateRealmMap() {
+            const realmMap = document.getElementById('realmMap');
+            realmMap.innerHTML = '';
+            
+            Object.keys(realms).forEach(realmKey => {
+                const realm = realms[realmKey];
+                const isUnlocked = gameState.unlockedRealms.includes(realmKey);
+                const progress = gameState.progress[realmKey];
+                
+                const tile = document.createElement('div');
+                tile.className = `realm-tile ${!isUnlocked ? 'locked' : ''}`;
+                tile.innerHTML = `
+                    <div class="realm-icon">${realm.icon}</div>
+                    <div class="realm-name">${realm.name}</div>
+                    <div class="realm-description">${realm.description}</div>
+                    <div>Progress: ${progress.explored}% explored</div>
+                    <button class="menu-button" onclick="enterRealm('${realmKey}')" ${!isUnlocked ? 'disabled' : ''}>
+                        ${isUnlocked ? 'Enter' : 'Locked'}
+                    </button>
+                `;
+                
+                realmMap.appendChild(tile);
+            });
+        }
+
+        function generateRealmSelectMap() {
+            const realmSelectMap = document.getElementById('realmSelectMap');
+            realmSelectMap.innerHTML = '';
+            
+            Object.keys(realms).forEach(realmKey => {
+                const realm = realms[realmKey];
+                const isUnlocked = gameState.unlockedRealms.includes(realmKey);
+                
+                const tile = document.createElement('div');
+                tile.className = `realm-tile ${!isUnlocked ? 'locked' : ''}`;
+                tile.onclick = () => isUnlocked && selectRealm(realmKey);
+                tile.innerHTML = `
+                    <div class="realm-icon">${realm.icon}</div>
+                    <div class="realm-name">${realm.name}</div>
+                    <div class="realm-description">${realm.description}</div>
+                `;
+                
+                realmSelectMap.appendChild(tile);
+            });
+        }
+
+        function selectRealm(realmKey) {
+            gameState.currentRealm = realmKey;
+            setSeasonalTheme(realmKey);
+            setWeatherEffect();
+            closeModal('realmSelectModal');
+            showNotification(`Entered ${realms[realmKey].name}!`);
+        }
+
+        function enterRealm(realmKey) {
+            if (gameState.unlockedRealms.includes(realmKey)) {
+                selectRealm(realmKey);
+            }
+        }
+
+        function setSeasonalTheme(realm) {
+            const gameScreen = document.getElementById('gameScreen');
+            gameScreen.className = `game-screen active season-${realm}`;
+        }
+
+        function setWeatherEffect() {
+            const weatherOverlay = document.getElementById('weatherOverlay');
+            const currentRealm = realms[gameState.currentRealm];
+            
+            weatherOverlay.className = 'weather-overlay';
+            if (currentRealm.weather === 'rain') {
+                weatherOverlay.classList.add('rain');
+            } else if (currentRealm.weather === 'snow') {
+                weatherOverlay.classList.add('snow');
+            }
+        }
+
+        // Action System
+        function interactAction() {
+            if (gameState.stamina < 10) {
+                showNotification('Not enough stamina!', 'error');
+                return;
+            }
+            
+            gameState.stamina -= 10;
+            const currentRealm = realms[gameState.currentRealm];
+            const randomEvent = Math.random();
+            
+            if (randomEvent < 0.3) {
+                // Find treasure
+                const credits = Math.floor(Math.random() * 20) + 5;
+                gameState.credits += credits;
+                showNotification(`Found ${credits} Seasonal Credits!`);
+            } else if (randomEvent < 0.6) {
+                // Encounter enemy
+                startBattle();
+            } else {
+                // Nothing happens
+                showNotification('You explore the area but find nothing of interest.');
+            }
+            
+            updateHUD();
+        }
+
+        function attackAction() {
+            if (gameState.inBattle) {
+                battleAction('attack');
+            } else {
+                showNotification('No enemies nearby to attack!', 'warning');
+            }
+        }
+
+        function gatherAction() {
+            if (gameState.stamina < 5) {
+                showNotification('Not enough stamina!', 'error');
+                return;
+            }
+            
+            gameState.stamina -= 5;
+            const currentRealm = realms[gameState.currentRealm];
+            const resource = currentRealm.resources[Math.floor(Math.random() * currentRealm.resources.length)];
+            
+            if (!gameState.inventory[resource]) {
+                gameState.inventory[resource] = 0;
+            }
+            gameState.inventory[resource]++;
+            
+            // Small chance to get credits
+            if (Math.random() < 0.3) {
+                const credits = Math.floor(Math.random() * 10) + 1;
+                gameState.credits += credits;
+                showNotification(`Gathered ${resource} and found ${credits} credits!`);
+            } else {
+                showNotification(`Gathered ${resource}!`);
+            }
+            
+            updateHUD();
+        }
+
+        // Battle System
+        function startBattle() {
+            const currentRealm = realms[gameState.currentRealm];
+            const enemy = currentRealm.enemies[Math.floor(Math.random() * currentRealm.enemies.length)];
+            
+            gameState.inBattle = true;
+            gameState.currentEnemy = {
+                icon: enemy,
+                health: 50 + Math.floor(Math.random() * 50),
+                maxHealth: 100,
+                name: `Wild ${enemy}`
+            };
+            
+            hideAllScreens();
+            document.getElementById('battleScreen').classList.add('active');
+            document.getElementById('enemyDisplay').innerHTML = enemy;
+            document.getElementById('battleLog').innerHTML = `<p>A ${gameState.currentEnemy.name} appears!</p>`;
+        }
+
+        function battleAction(action) {
+            if (!gameState.inBattle) return;
+            
+            const battleLog = document.getElementById('battleLog');
+            let logMessage = '';
+            
+            switch (action) {
+                case 'attack':
+                    if (gameState.stamina < 15) {
+                        logMessage = 'Not enough stamina to attack!';
+                        break;
+                    }
+                    gameState.stamina -= 15;
+                    const damage = Math.floor(Math.random() * 25) + 15;
+                    gameState.currentEnemy.health -= damage;
+                    logMessage = `You deal ${damage} damage to ${gameState.currentEnemy.name}!`;
+                    break;
+                    
+                case 'defend':
+                    gameState.stamina += 10;
+                    if (gameState.stamina > gameState.hero.maxStamina) {
+                        gameState.stamina = gameState.hero.maxStamina;
+                    }
+                    logMessage = 'You defend and recover stamina!';
+                    break;
+                    
+                case 'special':
+                    if (gameState.stamina < 30) {
+                        logMessage = 'Not enough stamina for special ability!';
+                        break;
+                    }
+                    gameState.stamina -= 30;
+                    const specialDamage = Math.floor(Math.random() * 40) + 20;
+                    gameState.currentEnemy.health -= specialDamage;
+                    logMessage = `You use your special ability and deal ${specialDamage} damage!`;
+                    break;
+                    
+                case 'flee':
+                    if (Math.random() < 0.7) {
+                        endBattle(false);
+                        logMessage = 'You successfully flee from battle!';
+                        updateBattleLog(logMessage);
+                        return;
+                    } else {
+                        logMessage = 'Failed to flee!';
+                    }
+                    break;
+            }
+            
+            updateBattleLog(logMessage);
+            
+            // Check if enemy is defeated
+            if (gameState.currentEnemy.health <= 0) {
+                const reward = Math.floor(Math.random() * 30) + 10;
+                gameState.credits += reward;
+                gameState.progress[gameState.currentRealm].explored += 5;
+                updateBattleLog(`${gameState.currentEnemy.name} defeated! You gained ${reward} credits!`);
+                
+                // Check for realm progression
+                if (gameState.progress[gameState.currentRealm].explored >= 100) {
+                    unlockNextRealm();
+                }
+                
+                setTimeout(() => endBattle(true), 2000);
+                return;
+            }
+            
+            // Enemy attacks back
+            setTimeout(() => {
+                const enemyDamage = Math.floor(Math.random() * 20) + 5;
+                gameState.hero.health -= enemyDamage;
+                updateBattleLog(`${gameState.currentEnemy.name} attacks you for ${enemyDamage} damage!`);
+                
+                if (gameState.hero.health <= 0) {
+                    gameState.hero.health = 1; // Prevent death, just set to 1
+                    updateBattleLog('You are defeated but manage to escape!');
+                    setTimeout(() => endBattle(false), 2000);
+                }
+                
+                updateHUD();
+            }, 1000);
+        }
+
+        function updateBattleLog(message) {
+            const battleLog = document.getElementById('battleLog');
+            battleLog.innerHTML += `<p>${message}</p>`;
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+
+        function endBattle(victory) {
+            gameState.inBattle = false;
+            gameState.currentEnemy = null;
+            hideAllScreens();
+            document.getElementById('gameScreen').classList.add('active');
+            
+            if (victory) {
+                showNotification('Victory! You can continue exploring.');
+            } else {
+                showNotification('Battle ended. Rest and try again!');
+            }
+            
+            updateHUD();
+        }
+
+        function unlockNextRealm() {
+            const currentRealm = realms[gameState.currentRealm];
+            if (currentRealm.unlocks.length > 0) {
+                const nextRealm = currentRealm.unlocks[0];
+                if (!gameState.unlockedRealms.includes(nextRealm)) {
+                    gameState.unlockedRealms.push(nextRealm);
+                    showNotification(`New realm unlocked: ${realms[nextRealm].name}!`);
+                    generateRealmMap();
+                }
+            }
+        }
+
+        // Shop System
+        function generateShopItems() {
+            const shopGrid = document.getElementById('shopGrid');
+            shopGrid.innerHTML = '';
+            
+            Object.keys(shopItems).forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.innerHTML = `<h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3>`;
+                shopGrid.appendChild(categoryDiv);
+                
+                shopItems[category].forEach(item => {
+                    const isOwned = gameState.upgrades[category].includes(item.id);
+                    const canAfford = gameState.credits >= item.price;
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = `shop-item ${isOwned ? 'owned' : ''}`;
+                    itemDiv.innerHTML = `
+                        <div style="font-size: 2rem;">${item.icon}</div>
+                        <h4>${item.name}</h4>
+                        <p>Price: ${item.price} credits</p>
+                        <button class="buy-btn" onclick="buyItem('${category}', '${item.id}', ${item.price})" 
+                                ${isOwned || !canAfford ? 'disabled' : ''}>
+                            ${isOwned ? 'Owned' : 'Buy'}
+                        </button>
+                    `;
+                    
+                    shopGrid.appendChild(itemDiv);
+                });
+            });
+        }
+
+        function buyItem(category, itemId, price) {
+            if (gameState.credits >= price && !gameState.upgrades[category].includes(itemId)) {
+                gameState.credits -= price;
+                gameState.upgrades[category].push(itemId);
+                
+                // Apply upgrade effects
+                applyUpgrade(category, itemId);
+                
+                showNotification(`Purchased ${itemId}!`);
+                updateHUD();
+                generateShopItems();
+            }
+        }
+
+        function applyUpgrade(category, itemId) {
+            switch (category) {
+                case 'weapons':
+                    gameState.hero.attack = (gameState.hero.attack || 10) + 5;
+                    break;
+                case 'armor':
+                    gameState.hero.defense = (gameState.hero.defense || 5) + 3;
+                    break;
+                case 'abilities':
+                    if (itemId === 'heal') {
+                        gameState.hero.health = Math.min(gameState.hero.health + 20, gameState.hero.maxHealth);
+                    }
+                    break;
+            }
+        }
+
+        // Inventory System
+        function generateInventory() {
+            const inventoryGrid = document.getElementById('inventoryGrid');
+            inventoryGrid.innerHTML = '';
+            
+            // Create 20 inventory slots
+            for (let i = 0; i < 20; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'inventory-slot';
+                
+                // Fill with items from inventory
+                const items = Object.keys(gameState.inventory);
+                if (i < items.length) {
+                    const item = items[i];
+                    const count = gameState.inventory[item];
+                    slot.className += ' filled';
+                    slot.innerHTML = `${item}<br><small>${count}</small>`;
+                    slot.title = `${item} x${count}`;
+                }
+                
+                inventoryGrid.appendChild(slot);
+            }
+        }
+
+        // Token System
+        function updateTokenDisplay() {
+            document.getElementById('tokenAmount').textContent = `${gameState.tokens} ST`;
+            const exchangeBtn = document.getElementById('exchangeBtn');
+            exchangeBtn.disabled = gameState.credits < 100;
+        }
+
+        function exchangeCredits() {
+            if (gameState.credits >= 100) {
+                gameState.credits -= 100;
+                gameState.tokens += 1;
+                showNotification('Exchanged 100 credits for 1 Seasonal Token!');
+                updateTokenDisplay();
+                updateHUD();
+            }
+        }
+
+        // UI Updates
+        function updateHUD() {
+            document.getElementById('healthValue').textContent = gameState.hero.health;
+            document.getElementById('staminaValue').textContent = gameState.stamina;
+            document.getElementById('creditsValue').textContent = gameState.credits;
+            
+            const healthPercent = (gameState.hero.health / gameState.hero.maxHealth) * 100;
+            const staminaPercent = (gameState.stamina / gameState.hero.maxStamina) * 100;
+            
+            document.getElementById('healthBar').style.width = `${healthPercent}%`;
+            document.getElementById('staminaBar').style.width = `${staminaPercent}%`;
+            
+            // Regenerate stamina slowly
+            if (gameState.stamina < gameState.hero.maxStamina) {
+                setTimeout(() => {
+                    gameState.stamina = Math.min(gameState.stamina + 1, gameState.hero.maxStamina);
+                    updateHUD();
+                }, 2000);
+            }
+        }
+
+        // Notification System
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Loading System
+        function showLoading() {
+            document.getElementById('loadingScreen').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingScreen').style.display = 'none';
+        }
+
+        // Auto-save system
+        function saveGame() {
+            const saveData = JSON.stringify(gameState);
+            // In a real implementation, this would save to a backend
+            console.log('Game saved:', saveData);
+        }
+
+        function loadGame() {
+            // In a real implementation, this would load from a backend
+            console.log('Game loaded');
+        }
+
+        // Auto-save every 30 seconds
+        setInterval(saveGame, 30000);
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            hideLoading();
+            initGame();
+        });
+
+        // Handle visibility change for mobile
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                saveGame();
+            }
+        });
+
+        // Touch/mobile optimizations
+        if ('ontouchstart' in window) {
+            // Add touch-specific optimizations
+            document.addEventListener('touchstart', (e) => {
+                // Prevent zoom on double tap for game buttons
+                if (e.target.matches('.action-btn, .menu-button, .battle-btn')) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('gameScreen').classList.contains('active')) {
+                switch (e.key) {
+                    case '1':
+                        interactAction();
+                        break;
+                    case '2':
+                        attackAction();
+                        break;
+                    case '3':
+                        gatherAction();
+                        break;
+                    case 'i':
+                    case 'I':
+                        showInventory();
+                        break;
+                    case 'm':
+                    case 'M':
+                        showMap();
+                        break;
+                    case 'Escape':
+                        showMainMenu();
+                        break;
+                }
+            }
+        });
+
+        // Prevent right-click context menu on game elements
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.game-container')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
